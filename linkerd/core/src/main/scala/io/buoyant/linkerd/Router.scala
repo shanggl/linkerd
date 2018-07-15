@@ -165,6 +165,9 @@ trait RouterConfig {
     param.Label(label) +
     DstBindingFactory.BindingTimeout(bindingTimeout)
 
+  /*
+    重要方法
+   */
   @JsonIgnore
   def router(params: Stack.Params): Router = {
     val prms = params ++ routerParams

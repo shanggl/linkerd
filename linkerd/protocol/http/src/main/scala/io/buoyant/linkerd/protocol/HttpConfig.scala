@@ -31,6 +31,7 @@ class HttpInitializer extends ProtocolInitializer.Simple {
   protected type Rsp = com.twitter.finagle.http.Response
 
   protected val defaultRouter = {
+    // 构建pathStack boundStack clientStack
     val pathStack = Http.router.pathStack
       .prepend(Headers.Dst.PathFilter.module)
       .replace(StackClient.Role.prepFactory, DelayedRelease.module)
@@ -49,6 +50,7 @@ class HttpInitializer extends ProtocolInitializer.Simple {
       .insertAfter(FailureAccrualFactory.role, FramingFilter.clientModule)
       .remove(ClientDtabContextFilter.role)
 
+    //从ProtocolInitializer 继承而来的 ProtocolRouter　
     Http.router
       .withPathStack(pathStack)
       .withBoundStack(boundStack)

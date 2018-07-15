@@ -74,9 +74,22 @@ object Linker {
     LoadService[RequestAuthorizerInitializer]
   )
 
+  /*
+    LoadService 类似与java.uitl.ServiceLoader 单体加载类
+    abstract class ProtocolInitializer extends ConfigInitializer
+    abstract class NamerInitializer extends ConfigInitializer
+    abstract class InterpreterInitializer extends ConfigInitializer
+    ...
+    这几个配置类都是继承自ConfigInitializer
+
+   */
+
+  /*
+  解析配置文件
+  */
   def parse(
     config: String,
-    inits: Initializers = LoadedInitializers
+    inits: Initializers = LoadedInitializers // Line 64
   ): LinkerConfig = {
     val mapper = Parser.objectMapper(config, inits.iter)
     mapper.readValue[LinkerConfig](config)
@@ -106,12 +119,16 @@ object Linker {
     usage: Option[UsageDataTelemeterConfig]
   ) {
 
+
+    /*
+    工厂函数,生成一个Linkerd  实例
+     */
     def mk(): Linker = {
       // At least one router must be specified
       if (routers.isEmpty) throw NoRoutersSpecified
-
+      //监控信息
       val metrics = MetricsTree()
-
+　　　//客户端雷达信息
       val telemeterParams = Stack.Params.empty + param.LinkerConfig(this) + metrics
       val adminTelemeter = new AdminMetricsExportTelemeter(metrics, histogramSnapshotInterval(), DefaultTimer)
       val usageTelemeter = usage.getOrElse(UsageDataTelemeterConfig()).mk(telemeterParams)
@@ -125,10 +142,11 @@ object Linker {
       } :+ adminTelemeter :+ usageTelemeter
 
       // Telemeters may provide StatsReceivers.
+      //状态信息报告
       val stats = mkStats(metrics, telemeters)
       LoadedStatsReceiver.self = NullStatsReceiver
       JvmStats.register(stats)
-
+    　 //跟踪器　　ZipKin ?
       val tracer = mkTracer(telemeters)
       DefaultTracer.self = tracer
 
@@ -199,7 +217,7 @@ object Linker {
 
   /**
    * Private concrete implementation, to help protect compatibility if
-   * the Linker api is extended.
+   * the Linker api is extended. 真正的组装器
    */
   private case class Impl(
     routers: Seq[Router],
